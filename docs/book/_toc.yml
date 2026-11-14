@@ -6,3 +6,8 @@ parts:
   - caption: The problem
     chapters:
       - file: problem/problem
+  - caption: Geometry
+    chapters:
+      - file: geometry/camera
+        sections:
+          - file: examples/01_camera_and_dataset/camera_and_dataset
