@@ -1,0 +1,12 @@
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.pytest_cache/
+docs/book/_build/
+docs/book/examples/
+data/

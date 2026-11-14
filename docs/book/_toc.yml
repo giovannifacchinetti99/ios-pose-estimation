@@ -1,0 +1,8 @@
+format: jb-book
+root: intro
+options:
+  numbered: true
+parts:
+  - caption: The problem
+    chapters:
+      - file: problem/problem
