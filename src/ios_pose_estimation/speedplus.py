@@ -162,6 +162,38 @@ class RangeReader(io.RawIOBase):
         return self._cache[start:start + size]
 
 
+def extract_member(blob, offset, info):
+    """
+    The content of a member of a zip archive, from bytes of the archive.
+
+    Parameters
+    ----------
+    blob : bytes
+        Bytes of the archive that contain the member.
+    offset : int
+        Position in `blob` of the local header of the member.
+    info : zipfile.ZipInfo
+        Entry of the member in the index of the archive.
+    """
+
+    import zlib
+
+    header = blob[offset:offset + 30]
+    if header[:4] != b"PK\x03\x04":
+        raise ValueError(f"no local header for {info.filename}")
+    name_length = int.from_bytes(header[26:28], "little")
+    extra_length = int.from_bytes(header[28:30], "little")
+    start = offset + 30 + name_length + extra_length
+    data = blob[start:start + info.compress_size]
+    if info.compress_type == zipfile.ZIP_DEFLATED:
+        data = zlib.decompress(data, -15)
+    elif info.compress_type != zipfile.ZIP_STORED:
+        raise ValueError(f"unsupported compression for {info.filename}")
+    if zlib.crc32(data) != info.CRC:
+        raise ValueError(f"corrupted member {info.filename}")
+    return data
+
+
 @dataclass
 class PoseLabel:
     """
@@ -222,9 +254,76 @@ class SpeedPlus:
 
     def _open_archive(self):
         if self._archive is None:
-            reader = RangeReader(http_range(self.url), http_size(self.url))
+            self._fetch = http_range(self.url)
+            reader = RangeReader(self._fetch, http_size(self.url))
             self._archive = zipfile.ZipFile(reader)
         return self._archive
+
+    def archive_images(self, domain):
+        """
+        The images of a domain in the order in which they are stored in the
+        archive, which is not the order of their names.
+
+        Returns
+        -------
+        list of zipfile.ZipInfo
+        """
+
+        prefix = f"{ARCHIVE_ROOT}/{domain}/images/"
+        members = [info for info in self._open_archive().infolist()
+                   if info.filename.startswith(prefix) and not info.is_dir()]
+        return sorted(members, key=lambda info: info.header_offset)
+
+    def prefetch(self, domain, count, start=0, block=64 << 20, workers=4):
+        """
+        Fetch many images of a domain with a few large requests.
+
+        The images of the archive are stored one after the other with no
+        gap, so a run of consecutive members is a single range of bytes.
+        The run of `count` images starting at position `start` in the
+        order of the archive is fetched in blocks of about `block` bytes,
+        `workers` blocks at a time, and every image not yet in the local
+        folder is written there. Since the order of the archive is
+        unrelated to the poses, a run is a random sample of the domain.
+
+        Returns
+        -------
+        list of str
+            Names of the images of the run.
+
+        Author: Giovanni Facchinetti, 2026
+        """
+
+        from concurrent.futures import ThreadPoolExecutor
+
+        members = self.archive_images(domain)[start:start + count]
+        groups, current, size = [], [], 0
+        for info in members:
+            current.append(info)
+            size += info.compress_size + 30 + len(info.filename) + 64
+            if size >= block:
+                groups.append(current)
+                current, size = [], 0
+        if current:
+            groups.append(current)
+
+        def fetch_group(group):
+            missing = [info for info in group
+                       if not (self.root / info.filename[len(ARCHIVE_ROOT) + 1:]).exists()]
+            if not missing:
+                return
+            first = missing[0].header_offset
+            last = missing[-1].header_offset + missing[-1].compress_size + 30 + len(missing[-1].filename) + 1024
+            blob = self._fetch(first, last)
+            for info in missing:
+                data = extract_member(blob, info.header_offset - first, info)
+                local = self.root / info.filename[len(ARCHIVE_ROOT) + 1:]
+                local.parent.mkdir(parents=True, exist_ok=True)
+                local.write_bytes(data)
+
+        with ThreadPoolExecutor(workers) as pool:
+            list(pool.map(fetch_group, groups))
+        return [info.filename.rsplit("/", 1)[-1] for info in members]
 
     def path(self, member):
         """

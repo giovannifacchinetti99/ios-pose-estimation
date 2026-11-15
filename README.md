@@ -20,7 +20,18 @@ conda env create -f environment.yml
 conda activate ios-pose-estimation
 ```
 
-or, with any Python 3.11 or later, `pip install -e ".[test]"`.
+or, with any Python 3.11 or later, `pip install -e ".[test]"`. The keypoint detector needs PyTorch, which the conda environment installs in its build for processors; with pip, add the `train` extra.
+
+## The keypoint detector
+
+The detector is a small heatmap network, trained on the synthetic images of SPEED+ on a laptop processor in a few hours. Two scripts reproduce it from the root of the repository:
+
+```bash
+python examples/03_keypoint_detector/fetch_data.py   # about 3 GB of images, a few minutes
+python examples/03_keypoint_detector/train.py        # writes data/models/detector.pt
+```
+
+The trained weights are not distributed, since they derive from a dataset licensed for non-commercial use with share-alike terms.
 
 ## Testing
 
@@ -28,7 +39,7 @@ or, with any Python 3.11 or later, `pip install -e ".[test]"`.
 pytest
 ```
 
-The tests do not access the network.
+The tests do not access the network; those of the detector are skipped when PyTorch is not installed.
 
 ## Usage
 
@@ -41,4 +52,10 @@ camera = dataset.camera()
 label = dataset.labels("synthetic", "train")[0]
 
 pixels, depth = project_pose(camera, label.quaternion, label.translation, TANGO_KEYPOINTS)
+
+# with a trained detector: keypoints, then pose with covariance by RANSAC
+from ios_pose_estimation.detector import KeypointDetector
+
+detector = KeypointDetector.load("data/models/detector.pt")
+estimate, detection = detector.pose(camera, dataset.image("synthetic", label.filename))
 ```

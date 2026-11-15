@@ -3,13 +3,17 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.13
+  - python=3.12
   - numpy
   - scipy
   - matplotlib
   - pillow
   - jupyter
   - pytest
+  - libblas=*=*openblas
   - pip
   - pip:
+      - --extra-index-url https://download.pytorch.org/whl/cpu
+      - torch
+      - torchvision
       - -e .
