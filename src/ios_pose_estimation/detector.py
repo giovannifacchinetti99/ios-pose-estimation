@@ -44,6 +44,7 @@ FINE_SCALE_RANGE = (1.2, 1.6)   # in training
 IMAGE_SIZE = (1920, 1200)
 IMAGE_CENTER = np.array([0.5 * (IMAGE_SIZE[0] - 1), 0.5 * (IMAGE_SIZE[1] - 1)])
 COARSE_SIDE = float(IMAGE_SIZE[0])
+FOREGROUND_WEIGHT = 20.0        # extra weight of the pixels near a keypoint in the loss
 
 
 def heatmap_to_input(points):
@@ -331,9 +332,20 @@ def make_batch(sources, indices, rng, generator=None, coarse_fraction=0.25, augm
     return images, targets, inside.float(), transforms
 
 
-def heatmap_loss(predicted, targets, weights):
-    """Mean squared difference of the heatmaps, keypoints outside the crop excluded."""
-    squared = ((predicted - targets) ** 2).mean(dim=(2, 3))
+def heatmap_loss(predicted, targets, weights, foreground=FOREGROUND_WEIGHT):
+    """
+    Mean squared difference of the heatmaps, keypoints outside the crop
+    excluded.
+
+    The bump of a keypoint covers a dozen of the 4096 pixels of its
+    heatmap, so a plain mean squared difference is already small for a
+    network that predicts zero everywhere, and training tends to settle
+    there first. Each pixel is therefore weighted by 1 + foreground times
+    its target value, which makes the pixels near the keypoint count as
+    much as the whole background.
+    """
+
+    squared = ((predicted - targets) ** 2 * (1.0 + foreground * targets)).mean(dim=(2, 3))
     return 1000.0 * (squared * weights).sum() / weights.sum().clamp(min=1.0)
 
 
@@ -500,7 +512,7 @@ class KeypointDetector:
     @torch.no_grad()
     def _run(self, image, transform):
         crop = warp(image, transform, INPUT_SIZE)
-        tensor = torch.from_numpy(crop).float()[None, None] / 255.0
+        tensor = torch.from_numpy(np.array(crop, dtype=np.float32))[None, None] / 255.0
         points, peaks = decode_batch(self.model(tensor), transform[None])
         return points[0], peaks[0]
 

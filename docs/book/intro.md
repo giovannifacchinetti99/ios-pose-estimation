@@ -37,9 +37,13 @@ represented, and the SPEED+ dataset on which the methods are developed and
 measured. It then derives how a pose is recovered from points recognized
 in an image, and how accurate it can be.
 
-The parts that follow add the recognition of those points with a neural
-network, the evaluation on images taken in a laboratory, and the model of
-the sensor that goes back into the simulation of the mission.
+Part III, *Recognition*, builds the neural network that finds those points
+in an image, trains it on the synthetic images of SPEED+ and measures it
+against the requirement of Part II.
+
+The parts that follow add the evaluation on images taken in a laboratory
+and the model of the sensor that goes back into the simulation of the
+mission.
 
 ## The dataset
 

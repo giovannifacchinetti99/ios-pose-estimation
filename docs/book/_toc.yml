@@ -14,3 +14,8 @@ parts:
       - file: geometry/pnp
         sections:
           - file: examples/02_pose_from_keypoints/pose_from_keypoints
+  - caption: Recognition
+    chapters:
+      - file: detection/keypoints
+        sections:
+          - file: examples/03_keypoint_detector/keypoint_detector

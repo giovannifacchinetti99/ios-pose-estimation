@@ -73,7 +73,10 @@ if __name__ == "__main__":
     validation = sources_for(dataset, camera, "validation")
     sources = merge(training, validation)
     train_indices = np.arange(len(training))
-    validation_indices = len(training) + np.arange(min(arguments.validation, len(validation)))
+    # a random subset: the images are sorted by name, and the second half of
+    # the names is the one rendered with the Earth in the background
+    chosen = np.random.default_rng(0).choice(len(validation), min(arguments.validation, len(validation)), replace=False)
+    validation_indices = len(training) + np.sort(chosen)
     print(f"training on {len(train_indices)} images, validating on {len(validation_indices)}", flush=True)
 
     models = ROOT / "models"
