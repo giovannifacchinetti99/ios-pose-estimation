@@ -6,6 +6,12 @@ parts:
   - caption: The problem
     chapters:
       - file: problem/problem
+  - caption: Foundations
+    chapters:
+      - file: foundations/images
+      - file: foundations/rotations
+      - file: foundations/estimation
+      - file: foundations/learning
   - caption: Geometry
     chapters:
       - file: geometry/camera

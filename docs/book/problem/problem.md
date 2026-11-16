@@ -126,7 +126,7 @@ and its distance matters more than its orientation.
 
 Recovering a pose from an image of a known object is a solved problem when
 the object has been recognized: if the pixels of a few known points of the
-object are given, geometry gives the pose, as Part II shows. The hard part
+object are given, geometry gives the pose, as Part III shows. The hard part
 is recognizing those points, on a spacecraft whose surfaces are covered in
 reflective foil, against the Earth or the black of space, in sunlight or
 under the illuminator. The methods that work best today use neural
@@ -146,6 +146,7 @@ with its uncertainty, validated on the laboratory images of SPEED+, and a
 model of its errors that can be flown in the simulation of the mission to
 show what it changes. The chain has the structure that the competitions
 found most accurate: a network finds a set of known points of the target in
-the image, and geometry turns those points into a pose. The book follows
-that structure, starting from the geometry, because it is the part that
-can be understood completely and that tells how good the network has to be.
+the image, and geometry turns those points into a pose. After a part of
+foundations, the book follows that structure, starting from the geometry,
+because it is the part that can be understood completely and that tells how
+good the network has to be.

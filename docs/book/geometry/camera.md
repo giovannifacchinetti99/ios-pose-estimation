@@ -1,12 +1,13 @@
 # The camera and the pose
 
-The previous chapter set the goal: from an image of a known target, recover
-its position and orientation. Before any method can do that, the reverse
-has to be clear: how a target in a given pose becomes an image. This
-chapter builds that forward model, from the geometry of an ideal camera to
-the distortion of a real lens, defines what a pose is and how it is written,
-and introduces the camera and the conventions of SPEED+, on which every
-later chapter relies.
+Part I set the goal: from an image of a known target, recover its position
+and orientation. Before any method can do that, the reverse has to be
+clear: how a target in a given pose becomes an image. This chapter builds
+that forward model, from the geometry of an ideal camera to the distortion
+of a real lens and the pose of the target, and introduces the camera and
+the conventions of SPEED+, on which every later chapter relies. It uses the
+pixel coordinates of {doc}`../foundations/images` and the rotations and
+poses of {doc}`../foundations/rotations`.
 
 ## The pinhole camera
 
@@ -41,8 +42,11 @@ $$
 
 where $f_x$ and $f_y$ are the focal length divided by the width and the
 height of a pixel, and $(c_x, c_y)$ is the pixel where the optical axis meets
-the detector. Written with homogeneous coordinates, the whole projection is
-a matrix product followed by a division,
+the detector. The two steps can be written as one with homogeneous
+coordinates, which describe a point of the image by three numbers $(\lambda
+u, \lambda v, \lambda)$ defined up to a common factor: the pixel is recovered
+by dividing the first two by the third. In this form the whole projection
+is a matrix product followed by that division,
 
 $$
 \lambda \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = K \begin{bmatrix} X \\ Y
@@ -90,15 +94,12 @@ camera of SPEED+.
 
 The target is a rigid body with its own frame, fixed to it, in which its
 geometry is known: the coordinates $\vect p_b$ of any point of it are
-constants. Its pose with respect to the camera is the pair that tells
-where that frame is and how it is turned: the position $\vect t$ of its
-origin in the camera frame, and the rotation between the two frames.
-
-Following SPEED+, the rotation is given as the quaternion $\vect q$ of the
-rotation from the camera frame to the body frame. Its matrix $R$ turns the
-components of a vector in the camera frame into its components in the body
-frame, so its transpose does the opposite, and a point of the target is seen
-by the camera at
+constants. Its pose with respect to the camera, as defined in
+{doc}`../foundations/rotations`, is the position $\vect t$ of its origin in
+the camera frame together with the quaternion $\vect q$ of the rotation from
+the camera frame to the body frame, in the passive convention of SPEED+.
+With $R$ the matrix of that quaternion, a point of the target is seen by the
+camera at
 
 $$
 \vect p_c = R^{\mathsf T}\,\vect p_b + \vect t .

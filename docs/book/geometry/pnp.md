@@ -6,7 +6,9 @@ of the target appear have been found, by a method the next part will
 build: which pose put them there, and how accurately can it be known? The
 answer has three parts, a direct estimate, its refinement, and the error
 that remains, and a fourth for the case in which some of the pixels are
-simply wrong.
+simply wrong. Each part applies a tool of
+{doc}`../foundations/estimation` to the camera model of the previous
+chapter.
 
 ## The problem
 
@@ -44,13 +46,15 @@ $$
 which are linear in the twelve entries of $[M \mid \vect t]$. Stacking them
 for all points gives a homogeneous system $A\,\vect h = 0$. With six points
 or more, not all on one plane, its solution is determined up to a scale, as
-the singular vector of $A$ with the smallest singular value. This is the
-direct linear transformation.
+the singular vector of $A$ with the smallest singular value, the
+construction explained in the section on homogeneous systems of the
+estimation chapter. This is the direct linear transformation.
 
 The solution does not know that $M$ is a rotation. Its scale is fixed by
 requiring the determinant of $M$ to be one, its sign by requiring the
 points to be in front of the camera, and the nearest rotation, obtained
-from the singular value decomposition of $M$, replaces it. The translation
+from the singular value decomposition of $M$ as shown in the same section,
+replaces it. The translation
 is then solved again, linearly, with the rotation fixed.
 
 This estimate has two weaknesses. It minimizes an algebraic quantity, the
@@ -74,11 +78,13 @@ $$
 This reprojection error is the quantity that the noise actually affects, so
 its minimum is the maximum likelihood estimate.
 
-The minimization is iterative. A rotation cannot be updated by adding
-increments to its entries without ceasing to be a rotation, so the
-unknowns of each iteration are six small corrections: a rotation vector
-$\boldsymbol\delta$, which turns the body by the angle
-$|\boldsymbol\delta|$ about its direction, and a shift of the translation.
+The minimization is the nonlinear least squares of the estimation chapter.
+A rotation cannot be updated by adding increments to its entries without
+ceasing to be a rotation, so the unknowns of each iteration are six small
+corrections: a rotation vector $\boldsymbol\delta$, which turns the body by
+the angle $|\boldsymbol\delta|$ about its direction, as in the section on
+small rotations of {doc}`../foundations/rotations`, and a shift of the
+translation.
 Around the current pose the projected pixels change linearly with them,
 through the Jacobian $J$, the $2n \times 6$ matrix of the derivatives of the
 pixels with respect to the corrections. The Gauss-Newton step solves
@@ -160,7 +166,8 @@ antenna that looks like another. Least squares spreads the error of such a
 point over the whole pose, and one outlier among eleven points can turn an
 error of a fraction of a degree into several degrees.
 
-The standard remedy is RANSAC, random sample consensus. Small random
+The standard remedy is RANSAC, random sample consensus, introduced in the
+estimation chapter. Small random
 subsets of the points, six at a time, give candidate poses by the linear
 estimate. Each candidate is scored by how many of all the points it
 projects within a threshold of where they were observed. The candidate with

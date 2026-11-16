@@ -32,14 +32,22 @@ the success of a docking, which accuracy is needed, why lighting is a
 problem of its own, and why a camera is the sensor of choice for the last
 metres.
 
-Part II, *Geometry*, describes how a camera forms an image, how a pose is
-represented, and the SPEED+ dataset on which the methods are developed and
-measured. It then derives how a pose is recovered from points recognized
-in an image, and how accurate it can be.
+Part II, *Foundations*, gathers the background the rest of the book relies
+on, so that it can be read without a course in computer vision: what a
+digital image is and what limits it, how rotations and poses are written,
+how unknowns are estimated from noisy measurements and how sure one can be
+of them, and how a neural network learns from examples. A reader who knows
+a topic can skip its chapter; the later parts point back to the sections
+they use.
 
-Part III, *Recognition*, builds the neural network that finds those points
+Part III, *Geometry*, describes how a camera forms an image and the SPEED+
+dataset on which the methods are developed and measured. It then derives
+how a pose is recovered from points recognized in an image, and how
+accurate it can be.
+
+Part IV, *Recognition*, builds the neural network that finds those points
 in an image, trains it on the synthetic images of SPEED+ and measures it
-against the requirement of Part II.
+against the requirement of Part III.
 
 The parts that follow add the evaluation on images taken in a laboratory
 and the model of the sensor that goes back into the simulation of the

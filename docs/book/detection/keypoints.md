@@ -77,9 +77,13 @@ Gaussian the refinement is exact.
 
 ## The network
 
-The network has two halves. The encoder turns the image into features: a
-cascade of convolutions, each looking at a three by three neighbourhood of
-the previous layer, interleaved with reductions of the resolution. Each
+The ingredients of the network, convolutions, reductions of resolution,
+residual connections and pretrained weights, are introduced in
+{doc}`../foundations/learning`; this section says how they are put
+together. The network has two halves. The encoder turns the image into
+features: a cascade of convolutions, each looking at a three by three
+neighbourhood of the previous layer, interleaved with reductions of the
+resolution. Each
 reduction doubles the size of the region that a feature summarizes, its
 receptive field, so that after a few of them a feature sees a whole antenna
 or a whole face of the body, at the price of a coarser grid. The decoder
@@ -104,14 +108,15 @@ on it in about 50 milliseconds per pass.
 The input of the network is a fixed number of pixels, and the target does
 not have a fixed size. The keypoints of Tango span about 1.1 m; at
 distance $d$ they span $f L / d$ pixels, some 330 pixels at 10 m and 1,300,
-two thirds of the width of the image, at 2.5 m. Reducing the whole 1920 pixel image to the 256 of the input
-divides everything by 7.5: at 10 m the target becomes 44 pixels wide, a
+two thirds of the width of the image, at 2.5 m. Reducing the whole 1920
+pixel image to the 256 of the input divides everything by 7.5: at 10 m the target becomes 44 pixels wide, a
 pixel of the heatmap becomes 30 pixels of the image, and the two pixel
 requirement is out of reach.
 
 The image is therefore cut first: a square around the target, of side
 $s = 1.4\,b$ where $b$ is the side of the box enclosing the keypoints, is
-resampled to the input. One pixel of the input is then $s/256$ pixels of
+resampled to the input, with the similarity transformation and the
+interpolation of {doc}`../foundations/images`. One pixel of the input is then $s/256$ pixels of
 the image, about 1.8 at 10 m and 6 at 3 m.
 
 The crop does more than recover resolution: it makes the problem the same
@@ -158,14 +163,12 @@ changes do not make the synthetic images look like real ones, but they keep
 the network from relying on the exact gray levels of the renderer, which is
 the first and cheapest defence against the gap between the two.
 
-The weights are updated by AdamW, a gradient method that adapts its step
-to each parameter and decays the weights slightly at each step. The
-learning rate follows one cycle: it rises over the first tenth of the
-training and then decreases to zero along a cosine, which lets the early
-steps move far and the last ones settle. After every pass over the
-training images, an epoch, the error of the keypoints is measured on
-validation images that the network never trains on, and the weights with
-the lowest error are kept.
+The weights are updated in batches of 32 crops by AdamW, the Adam method
+with weight decay, with a learning rate that rises over the first tenth of
+the training and then decreases to zero along a cosine, as described in the
+foundations. After every epoch the error of the keypoints is measured on
+validation images that the network never trains on, chosen at random, and
+the weights with the lowest error are kept.
 
 ## What to expect
 
